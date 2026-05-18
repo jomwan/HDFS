@@ -65,6 +65,13 @@ This repository contains fully implemented data pipelines in the `scenarios/` di
     *   [visualize_airline_sentiment.py](file:///c:/HDFS/scenarios/airline_sentiment/notebooks/visualize_airline_sentiment.py): Renders the linguistic metrics.
 *   **Executive Report**: [lab_interpretation.md](file:///c:/HDFS/scenarios/airline_sentiment/lab_interpretation.md) (Covers language tokenizations, sentiment matrices, and customer service recommendations).
 
+### 🛡️ 3. PaySim Financial Fraud Detection (`scenarios/fraud_detection`)
+*   **Objectives**: Load synthetic mobile transaction logs from HDFS, perform feature engineering to detect destination-balance discrepancies, isolate high-risk anomalous transfers, and write analytical outputs natively to relational Hive databases and non-relational Document databases (MongoDB).
+*   **Key Scripts**:
+    *   [fraud_analysis.py](file:///c:/HDFS/scenarios/fraud_detection/notebooks/fraud_analysis.py): PySpark processing pipeline using Spark SQL to build Hive catalogs (`fraud_db.paysim_processed`) and the native MongoDB Connector to publish document collection alerts.
+    *   [visualize_fraud.py](file:///c:/HDFS/scenarios/fraud_detection/notebooks/visualize_fraud.py): Connects to aggregate CSV data to generate and export visual dashboards.
+*   **Interactive Asset**: [fraud_dashboard.html](file:///c:/HDFS/scenarios/fraud_detection/notebooks/fraud_dashboard.html) — An interactive Plotly dashboard highlighting transaction volume distributions, log-scale fraud types, and temporal timelines of confirmed fraudulent activity.
+
 ---
 
 ## 📤 Section 3: Publishing to GitHub
