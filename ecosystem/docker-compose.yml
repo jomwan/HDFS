@@ -1,0 +1,208 @@
+services:
+  # ============================
+  # HADOOP CORE: HDFS + YARN
+  # ============================
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    restart: unless-stopped
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "9870:9870"   # HDFS NameNode Web UI
+      - "9000:9000"   # HDFS RPC
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+      - ../scenarios:/scenarios
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    restart: unless-stopped
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SERVICE_PRECONDITION=namenode:9870
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+    ports:
+      - "9864:9864"   # DataNode Web UI
+    volumes:
+      - datanode_data:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    restart: unless-stopped
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    ports:
+      - "8088:8088"   # YARN ResourceManager Web UI
+    depends_on:
+      - namenode
+      - datanode
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    restart: unless-stopped
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    ports:
+      - "8042:8042"   # NodeManager UI
+    depends_on:
+      - resourcemanager
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    restart: unless-stopped
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "8188:8188"   # Job History UI
+    volumes:
+      - historyserver_data:/hadoop/yarn/timeline
+    depends_on:
+      - namenode
+      - datanode
+      - resourcemanager
+
+  # ============================
+  # SPARK (Python-ready)
+  # ============================
+  spark-master:
+    image: bde2020/spark-master:3.1.2-hadoop3.2
+    container_name: spark-master
+    restart: unless-stopped
+    environment:
+      - SPARK_MODE=master
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    depends_on:
+      - namenode
+      - datanode
+
+  spark-worker:
+    image: bde2020/spark-worker:3.1.2-hadoop3.2
+    container_name: spark-worker
+    restart: unless-stopped
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "8081:8081"
+    depends_on:
+      - spark-master
+
+  # ============================
+  # JUPYTER NOTEBOOK (PySpark)
+  # ============================
+  jupyter:
+    image: jupyter/pyspark-notebook
+    container_name: jupyter
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - JUPYTER_TOKEN=analytics
+    volumes:
+      - ../scenarios:/home/jovyan/work
+    depends_on:
+      - spark-master
+
+
+  # ============================
+  # HIVE (SQL on Hadoop)
+  # ============================
+  hive-metastore-db:
+    image: postgres:13
+    container_name: hive-metastore-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+    volumes:
+      - hive_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d metastore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    restart: unless-stopped
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      - SERVICE_PRECONDITION=hive-metastore-db:5432
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "9083:9083"
+    depends_on:
+      hive-metastore-db:
+        condition: service_healthy
+      namenode:
+        condition: service_healthy
+      datanode:
+        condition: service_healthy
+
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    restart: unless-stopped
+    environment:
+      - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore-db/metastore
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "10000:10000"  # HiveServer2 (JDBC)
+    depends_on:
+      - hive-metastore
+
+   # ============================
+  # MONGODB (NoSQL) + GUI (mongo-express)
+  # ============================
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb_data:/data/db
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_BASICAUTH: "false"
+    depends_on:
+      - mongodb
+
+
+# ============================
+# VOLUMES
+# ============================
+volumes:
+  namenode_data:
+  datanode_data:
+  historyserver_data:
+  hive_db_data:
+  mongodb_data:

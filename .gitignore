@@ -1,0 +1,36 @@
+# === Massive Data Directories (Block HDFS/CSV downloads from pushing to Git) ===
+scenarios/*/data/
+scenarios/retail_transaction_analytics/notebooks/*.csv
+scenarios/airline_sentiment/notebooks/*.csv
+scenarios/fraud_detection/notebooks/*.csv
+*.csv
+*.parquet
+*.json
+!metadata.json
+
+# === Python & Notebook Caches ===
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.pytest_cache/
+.virtualenv/
+venv/
+ENV/
+
+# === Docker & Local Volumes ===
+.docker/
+*namenode_data*
+*datanode_data*
+*mongodb_data*
+*hive_db_data*
+
+# === OS and IDE Specifics ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
