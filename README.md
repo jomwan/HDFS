@@ -72,29 +72,11 @@ This repository contains fully implemented data pipelines in the `scenarios/` di
     *   [visualize_fraud.py](file:///c:/HDFS/scenarios/fraud_detection/notebooks/visualize_fraud.py): Connects to aggregate CSV data to generate and export visual dashboards.
 *   **Interactive Asset**: [fraud_dashboard.html](file:///c:/HDFS/scenarios/fraud_detection/notebooks/fraud_dashboard.html) — An interactive Plotly dashboard highlighting transaction volume distributions, log-scale fraud types, and temporal timelines of confirmed fraudulent activity.
 
+### 🇹🇭 4. Thai Shop Reviews NLP Sentiment Analysis (`scenarios/thai_shop_reviews`)
+*   **Objectives**: Ingest unstructured Thai e-commerce shop review streams, implement a dictionary-based tokenization engine for Thai linguistic sentiment parsing, aggregate feedback vectors across categories, and construct a real-time best-selling product leaderboard.
+*   **Key Scripts**:
+    *   [process_thai_data.py](file:///c:/HDFS/scenarios/thai_shop_reviews/notebooks/process_thai_data.py): PySpark pipeline using **PyThaiNLP's word tokenizer (`newmm`)** inside a custom User-Defined Function (UDF) to catalog sentiment classifications in **Apache Hive** (`thai_shop_db.reviews_processed`) and high-performing product list leaderboards in **MongoDB** (`thai_shop.leaderboard`).
+    *   [visualize_thai_trends.py](file:///c:/HDFS/scenarios/thai_shop_reviews/notebooks/visualize_thai_trends.py): Reads sentiment aggregates to export visual analysis graphs.
+*   **Interactive Asset**: [thai_shop_dashboard.html](file:///c:/HDFS/scenarios/thai_shop_reviews/notebooks/thai_shop_dashboard.html) — An interactive Plotly dashboard demonstrating review sentiment trends and the top positive product leaderboard.
+
 ---
-
-## 📤 Section 3: Publishing to GitHub
-
-To push this entire big data portfolio to your GitHub account:
-
-1.  **Initialize Git**:
-    ```bash
-    git init
-    ```
-2.  **Add Files**:
-    *(Note: Our custom `.gitignore` will automatically prevent huge datasets like Tweets.csv or OnlineRetail.csv from uploading)*
-    ```bash
-    git add .
-    ```
-3.  **Commit Code**:
-    ```bash
-    git commit -m "feat: complete big data HDFS-Spark cluster portfolio with retail & sentiment scenarios"
-    ```
-4.  **Add Remote and Push**:
-    Create a new repository on [GitHub](https://github.com/) named `Hadoop-Spark-Big-Data-Analytics-Portfolio` (leave it empty without initializing README or gitignore), then run:
-    ```bash
-    git branch -M main
-    git remote add origin https://github.com/YOUR_GITHUB_USERNAME/Hadoop-Spark-Big-Data-Analytics-Portfolio.git
-    git push -u origin main
-    ```
